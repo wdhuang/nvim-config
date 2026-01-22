@@ -265,9 +265,6 @@ return {
 
       local capabilities = require('blink.cmp').get_lsp_capabilities()
       local servers = {
-        gopls = {},
-        pyright = {},
-        rust_analyzer = {},
         ts_ls = {},
         html = {},
         jsonls = {},
@@ -289,7 +286,7 @@ return {
         'stylua',
         'prettier',
         'prettierd',
-        'ruff',
+        'js-debug-adapter',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -335,9 +332,6 @@ return {
       formatters_by_ft = {
         lua = { 'stylua' },
         javascript = { 'prettierd', 'prettier', stop_after_first = true },
-        python = { 'ruff' },
-        go = { 'gofmt' },
-        rust = { 'rustfmt' },
       },
     },
   },
@@ -433,10 +427,7 @@ return {
         'query',
         'vim',
         'vimdoc',
-        'python',
         'javascript',
-        'go',
-        'rust',
       },
       auto_install = true,
       highlight = {
@@ -499,7 +490,6 @@ return {
       'nvim-neotest/nvim-nio',
       'mason-org/mason.nvim',
       'jay-babu/mason-nvim-dap.nvim',
-      'leoluz/nvim-dap-go',
     },
     keys = {
       {
@@ -559,7 +549,7 @@ return {
       require('mason-nvim-dap').setup {
         automatic_installation = true,
         handlers = {},
-        ensure_installed = { 'delve' },
+        ensure_installed = { 'js' },
       }
 
       ---@diagnostic disable-next-line: missing-fields
@@ -585,11 +575,38 @@ return {
       dap.listeners.before.event_terminated['dapui_config'] = dapui.close
       dap.listeners.before.event_exited['dapui_config'] = dapui.close
 
-      require('dap-go').setup {
-        delve = {
-          detached = vim.fn.has 'win32' == 0,
+      local js_debug_path = vim.fn.stdpath 'data' .. '/mason/packages/js-debug-adapter/js-debug/src/dapDebugServer.js'
+      dap.adapters['pwa-node'] = {
+        type = 'server',
+        host = '127.0.0.1',
+        port = '${port}',
+        executable = {
+          command = 'node',
+          args = { js_debug_path, '${port}' },
         },
       }
+
+      for _, language in ipairs { 'javascript', 'javascriptreact', 'typescript', 'typescriptreact' } do
+        dap.configurations[language] = {
+          {
+            type = 'pwa-node',
+            request = 'launch',
+            name = 'Launch current file',
+            program = '${file}',
+            cwd = '${workspaceFolder}',
+            sourceMaps = true,
+            protocol = 'inspector',
+            console = 'integratedTerminal',
+          },
+          {
+            type = 'pwa-node',
+            request = 'attach',
+            name = 'Attach to process',
+            processId = require('dap.utils').pick_process,
+            cwd = '${workspaceFolder}',
+          },
+        }
+      end
     end,
   },
 }
