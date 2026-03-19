@@ -11,9 +11,10 @@ Personal Neovim configuration using lazy.nvim.
 ## Requirements
 
 - Neovim 0.10+ (recommended)
-- `git`, `make`, `unzip`
+- `git`
 - `rg` (Telescope live_grep)
-- Nerd Font (optional, icons)
+- Nerd Font (icons)
+- `make` (optional, for `telescope-fzf-native`)
 
 ## Usage
 
@@ -26,6 +27,11 @@ Inside Neovim:
 ```
 :Lazy
 :Lazy sync
-:Mason
 :checkhealth
 ```
+
+Common entry points:
+
+- `\\` to reveal the current file in Neo-tree
+- `<leader>sf` to find files
+- `<leader>sg` to grep the project
